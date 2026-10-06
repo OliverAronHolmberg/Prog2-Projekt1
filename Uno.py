@@ -8,8 +8,7 @@ COLORS = [
     "Red",
     "Green",
     "Blue",
-    "Yellow",
-    None
+    "Yellow"
 ]
 
 VALUES = [
@@ -17,7 +16,7 @@ VALUES = [
 ]
 
 ACTION_TYPES = [
-    "Skip", "Reverse", "+2"
+    "Block", "Reverse", "+2"
 ]
 
 WILD_TYPES = [
@@ -29,6 +28,9 @@ WILD_TYPES = [
 class Card():
     def __init__(self, color):
         self.color = color
+
+    def __str__(self):
+        return ""
 
 class NumberCard(Card):
     def __init__(self, color, value):
@@ -62,14 +64,36 @@ class Deck():
             cards = []
         self.cards = cards
 
+    def showAll(self):
+        for card in self.cards:
+            print(card)
+            print(len(self.cards))
+
+    def drawCard(self, num):
+        cards_dealt = self.cards[:num]
+        self.cards = self.cards[num:]
+        return cards_dealt
+
+    def shuffleDeck(self):
+        for c in range(len(self.cards)):
+            r = random.randint(c, len(self.cards) - 1)
+
+            temp_card = self.cards[r]
+            self.cards[r] = self.cards[c]
+            self.cards[c] = temp_card
+            
+
+
+
     @staticmethod
     def createDeck():
         cards = []
 
         for color in COLORS:
-            cards.append(NumberCard(color, 0)) ## FIXA SÅ DEN INTE HAR 2ST 0 utan bara 1
-            for value in VALUES:
-                cards.append(NumberCard(color, value)) 
+            cards.append(NumberCard(color, 0)) 
+            for value in VALUES[1:]:
+                for x in range(2):
+                    cards.append(NumberCard(color, value)) 
             for action in ACTION_TYPES:
                 for x in range(2):
                     cards.append(ActionCard(color, action)) 
@@ -102,11 +126,11 @@ class HumanPlayer(Player):
 
 
 def gameLoop():
-
     while True:
         pass
 
 
 cards = Deck.createDeck()
 deck = Deck(cards)
-
+deck.drawCard(10)
+deck.showAll()
