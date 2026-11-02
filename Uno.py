@@ -67,7 +67,7 @@ class Deck():
     def showAll(self):
         for card in self.cards:
             print(card)
-            print(len(self.cards))
+        #print(len(self.cards))
 
     def drawCard(self, num):
         cards_dealt = self.cards[:num]
@@ -110,27 +110,30 @@ class Deck():
 
 #Player
 class Player():
-    pass
+    def __init__(self, hand):
+        self.hand = hand
+
+    def showHand(self):
+        for card in self.hand:
+            print(card)
 
 class ComputarPlayer(Player):
-    pass
+    def __init__(self, hand):
+        self.hand = hand
 
 class HumanPlayer(Player):
-    pass
+    def __init__(self, hand):
+        self.hand = hand
 
 
 
+class Game:
+    def __init__(self, playerAmount, deck):
+        self.deck = deck
 
+    
 
+    
 
+subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
 
-
-def gameLoop():
-    while True:
-        pass
-
-
-cards = Deck.createDeck()
-deck = Deck(cards)
-deck.drawCard(10)
-deck.showAll()
