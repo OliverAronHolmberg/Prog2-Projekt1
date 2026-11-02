@@ -1,6 +1,7 @@
 import random
 import os
 import subprocess
+import time
 
 # subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
 
@@ -33,6 +34,8 @@ class Card():
 
     def __str__(self):
         return ""
+
+    
 
 class NumberCard(Card):
     def __init__(self, color, value):
@@ -119,21 +122,122 @@ class Player():
         for card in self.hand:
             print(card)
 
-class ComputarPlayer(Player):
+    def playerTurn(self):
+        pass
+
+class ComputerPlayer(Player):
     def __init__(self, hand):
         self.hand = hand
+
+    def playerTurn(self):
+        pass
 
 class HumanPlayer(Player):
     def __init__(self, hand):
         self.hand = hand
 
+    def playerTurn(self, discardPile):
+        print("Your Turn")
+        print("---------")  
+        print("Your hand: ")
+
+        
+        
+
+        while True:
+            for i, card in enumerate(self.hand, 1):
+                print(f"{i}. {card}")
+
+            try:
+                option = int(input(f"Chose a card, 1-{max(self.hand)}: "))
+                for i, card in enumerate(self.hand, 1):
+                    if card[option] == card[i]:
+
+
+            except:
+                print("Invalid option, try again.")
+
+        validCards = []
+
+        for i, card in enumerate(self.hand, 1):
+            print(f"{i}. {card}")
+            if card.__class__.__name__ == "WildCard":
+                validCards.append(i)
+
+            elif card.__class__.__name__ == "ActionCard":
+                if card.color == discardPile[-1].color:
+                    validCards.append(i)
+                try:
+                    if card.action_type == discardPile[-1].action_type:
+                        validCards.append(i)
+                except:
+                    continue
+
+            elif card.__class__.__name__ == "NumberCard":
+                try:
+                    if card.color == discardPile[-1].color:
+                        validCards.append(i)
+                    elif card.value == discardPile[-1].value:
+                        validCards.append(i)
+                except:
+                    continue
+            
+
+
+
+
+        while True:
+            try:
+                chosen_card = int(input("Choose a card: "))
+                if chosen_card in validCards:
+                    player_card = self.hand.pop(chosen_card - 1)
+                    discardPile.append(player_card)
+                    return
+                else:
+                    print("Invalid option, choose again")
+                    
+                
+
+            except:
+                print("Invalid option, choose again")
+
+        
+        
+
 
 
 class Game:
-    def __init__(self, playerAmount, deck):
+    def __init__(self, deck):
         self.deck = deck
+        self.discardPile = []
+        self.players = []
 
-    
+    def startGame(self, playerAmount):
+        self.players.append(HumanPlayer(self.deck.drawCard(7)))
+        for _ in range(playerAmount - 1):
+            self.players.append(ComputerPlayer(self.deck.drawCard(7)))
+        self.discardPile.append(self.deck.drawCard(1)[0])
+        print(f"Starting game with {playerAmount} players")
+        
+        
+
+    def gameLoop(self):
+        while True:
+            for i, player in enumerate(self.players, start = 1):                
+                print(f"Top Card: {self.discardPile[-1]}")
+                
+                if (i == 1):
+                    player.playerTurn(self.discardPile)
+                else:
+                    pass
+                    # player.chooseCard()
+
+                time.sleep(1)
+                
+
+            
+
+
 
     
 
@@ -143,4 +247,7 @@ subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
 cards = Deck.createDeck()
 deck = Deck(cards)
 deck.shuffleDeck()
-deck.showAll()
+
+game = Game(deck)
+game.startGame(3)
+game.gameLoop()
