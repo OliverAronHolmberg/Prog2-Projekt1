@@ -4,30 +4,32 @@ import subprocess
 
 # subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
 
-COLORS = [
-    "Red",
-    "Green",
-    "Blue",
-    "Yellow"
-]
-
-VALUES = [
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-]
-
-ACTION_TYPES = [
-    "Block", "Reverse", "+2"
-]
-
-WILD_TYPES = [
-    "Wild Card", "+4"
-]
-
 
 #Cards
 class Card():
     def __init__(self, color):
         self.color = color
+
+    
+    COLORS = [
+        "Red",
+        "Green",
+        "Blue",
+        "Yellow"
+    ]
+
+    VALUES = [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    ]
+
+    ACTION_TYPES = [
+        "Block", "Reverse", "+2"
+    ]
+
+    WILD_TYPES = [
+        "Wild Card", "+4"
+    ]
+
 
     def __str__(self):
         return ""
@@ -89,16 +91,16 @@ class Deck():
     def createDeck():
         cards = []
 
-        for color in COLORS:
+        for color in Card.COLORS:
             cards.append(NumberCard(color, 0)) 
-            for value in VALUES[1:]:
+            for value in Card.VALUES[1:]:
                 for x in range(2):
                     cards.append(NumberCard(color, value)) 
-            for action in ACTION_TYPES:
+            for action in Card.ACTION_TYPES:
                 for x in range(2):
                     cards.append(ActionCard(color, action)) 
 
-        for wild in WILD_TYPES:
+        for wild in Card.WILD_TYPES:
             for x in range(4):
                 cards.append(WildCard(None, wild)) 
 
@@ -137,3 +139,8 @@ class Game:
 
 subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
 
+
+cards = Deck.createDeck()
+deck = Deck(cards)
+deck.shuffleDeck()
+deck.showAll()
