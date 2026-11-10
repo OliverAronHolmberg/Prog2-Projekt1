@@ -122,6 +122,17 @@ class Player:
         self.name = name
         self.hand = hand
 
+class ComputarPlayer(Player):
+    def __init__(self, name, hand):
+        self.name = name
+        self.hand = hand
+
+    def playTurn(self, topCard, deck, drawStack):
+        print(f"{self.name}'s turn")
+
+        
+
+    
         
 
 class HumanPlayer(Player):
@@ -177,7 +188,15 @@ class HumanPlayer(Player):
 
         return False
 
-    def canStack(self, topCard, drawStack):
+    def canStack(self, drawStack):
+        if drawStack <= 0:
+            return False
+
+        for card in self.hand:
+            if card.__class__.__name__ == "ActionCard" and card.action_type == "+2":
+                return True
+            if card.__class__.__name__ == "WildCard" and card.wild_type == "+4":
+                return True
         return False
 
     def playTurn(self, topCard, deck, drawStack):
@@ -189,7 +208,33 @@ class HumanPlayer(Player):
                 print(f"{i}. {card}")
 
             if drawStack > 0:
-                print(f"{self.name} can't play and has to take the full +{drawStack} punishment.")
+                if self.canStack(drawStack):
+                    print(f"{self.name} must either stack +2 or +4, or take the full +{drawStack} penalty.")
+                    try:
+                        option = int(input("Choose a card: "))
+                    except:
+                        print("Invalid option, try again")
+                        continue
+
+                    if option <= 0 or option > len(self.hand):
+                        print("Invalid option, try again")
+                        continue
+
+                    selected_card = self.hand[option - 1]
+
+                    if selected_card.__class__.__name__ == "ActionCard" and selected_card.action_type == "+2":
+                        self.hand.pop(option - 1)
+                        return selected_card
+
+                    if selected_card.__class__.__name__ == "WildCard" and selected_card.wild_type == "+4":
+                        selected_card.color = self.chooseColor()
+                        self.hand.pop(option - 1)
+                        return selected_card
+
+                    print("Invalid. You must stack with +2 or +4, or take the penalty.")
+                    continue
+
+                print(f"{self.name} can't play +2/+4 and has to take the full +{drawStack} punishment.")
                 input("Press Enter to draw the cards... ")
                 for _ in range(drawStack):
                     if not deck.cards:
@@ -265,6 +310,7 @@ class Game():
     def playGame(self):
         currentPlayerIdx = 0
         drawStack = 0
+        direction = 1
 
         while True:
             if len(self.players) == 0:
@@ -276,13 +322,13 @@ class Game():
 
             if move == "DrawStackPassed":
                 drawStack = 0
-                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                currentPlayerIdx = (currentPlayerIdx + direction) % len(self.players)
                 time.sleep(1)
                 continue
 
             if move == "None":
                 drawStack = 0
-                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                currentPlayerIdx = (currentPlayerIdx + direction) % len(self.players)
                 time.sleep(1)
                 continue
 
@@ -294,18 +340,19 @@ class Game():
                 return
 
             if move.__class__.__name__ == "WildCard" and move.wild_type == "+4":
-                drawStack = 4
-                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                drawStack += 4
+                currentPlayerIdx = (currentPlayerIdx + direction) % len(self.players)
             elif move.__class__.__name__ == "ActionCard" and move.action_type == "+2":
-                drawStack = 2
-                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                drawStack += 2
+                currentPlayerIdx = (currentPlayerIdx + direction) % len(self.players)
             elif move.__class__.__name__ == "ActionCard" and move.action_type == "Reverse":
                 self.players.reverse()
-                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                direction *= -1
+                currentPlayerIdx = (currentPlayerIdx + direction) % len(self.players)
             elif move.__class__.__name__ == "ActionCard" and move.action_type == "Block":
-                currentPlayerIdx = (currentPlayerIdx + 2) % len(self.players)
+                currentPlayerIdx = (currentPlayerIdx + (2 * direction)) % len(self.players)
             else:
-                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                currentPlayerIdx = (currentPlayerIdx + direction) % len(self.players)
 
             if len(self.players[currentPlayerIdx].hand) < 1:
                 subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
