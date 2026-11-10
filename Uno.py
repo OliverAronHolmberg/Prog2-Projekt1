@@ -3,6 +3,8 @@ import subprocess
 import os
 import time
 
+import bcolors
+
 #Cards
 class Card():
     def __init__(self, color):
@@ -41,7 +43,8 @@ class NumberCard(Card):
         self.value = value
 
     def __str__(self):
-        return f"{self.color} | {self.value}"
+        color_code = bcolors.Bcolors.colors.get(self.color, bcolors.Bcolors.WHITE)
+        return f"{color_code}{self.color} | {self.value}{bcolors.Bcolors.ENDC}"
 
 class ActionCard(Card):
     def __init__(self, color, action_type):
@@ -49,7 +52,8 @@ class ActionCard(Card):
         self.action_type = action_type
 
     def __str__(self):
-        return f"{self.color} | {self.action_type}"
+        color_code = bcolors.Bcolors.colors.get(self.color, bcolors.Bcolors.WHITE)
+        return f"{color_code}{self.color} | {self.action_type}{bcolors.Bcolors.ENDC}"
 
 class WildCard(Card):
     def __init__(self, color, wild_type):
@@ -57,7 +61,10 @@ class WildCard(Card):
         self.wild_type = wild_type
 
     def __str__(self):
-        return f"{self.color} | {self.wild_type}"
+        if self.color is None:
+            return f"{bcolors.Bcolors.PURPLE}Wild | {self.wild_type}{bcolors.Bcolors.ENDC}"
+        color_code = bcolors.Bcolors.colors.get(self.color, bcolors.Bcolors.WHITE)
+        return f"{color_code}{self.color} | {self.wild_type}{bcolors.Bcolors.ENDC}"
 
 
 #Deck
@@ -115,14 +122,13 @@ class Player:
         self.name = name
         self.hand = hand
 
-        COLORS = []
+        
 
 class HumanPlayer(Player):
     def __init__(self, name, hand):
         self.name = name
         self.hand = hand
 
-    
     def chooseColor(self):
         COLORS = ["Red", "Green", "Blue", "Yellow"]
         while True:
@@ -135,125 +141,6 @@ class HumanPlayer(Player):
                 print("Invalid color, try again.")
             except:
                 print("Invalid color, try again.")
-    
-
-
-
-    def playTurn(self, topCard, deck, drawStack):
-
-        topCardType = topCard.__class__.__name__
-
-        if not self.canPlay(topCard):
-            print(f"{self.name} can't play a card, drawing up to 3 cards...")
-            for _ in range(3):
-                if not deck.cards:
-                    print("No more cards in deck.")
-                    break
-
-                drawn_card = deck.drawCards(1)[0]
-                self.hand.append(drawn_card)
-                print(f"{self.name} drew 1 card: {drawn_card}")
-
-                if self.canPlay(topCard):
-                    print(f"{self.name} can play the drawn card: {drawn_card}")
-                    if drawn_card.__class__.__name__ == "WildCard":
-                        drawn_card.color = self.chooseColor()
-                    self.hand.pop()
-                    return drawn_card
-
-            print(f"{self.name} still couldn't play after 3 cards.")
-            return "None"
-
-        while True:
-            print(f"Top card: {topCard}")
-            print("-----------")
-            print(f"{self.name}'s turn: ")
-            for i, card in enumerate(self.hand, 1):
-                print(f"{i}. {card}")
-
-            try:
-                option = int(input("Choose a card: "))
-
-                if option > 0 and option <= len(self.hand):
-                    selected_card = self.hand[option - 1]
-
-                    if topCardType == "WildCard" and topCard.wild_type == "+4":
-                        if selected_card.__class__.__name__ == "WildCard":
-                            if selected_card.wild_type == "+4":
-                                selected_card.color = self.chooseColor()
-                                self.hand.pop(option - 1)
-                                return selected_card
-                            else:
-                                print("Invalid option, try again.")
-                                continue
-
-                        elif selected_card.__class__.__name__ == "ActionCard":
-                            if selected_card.action_type == "+2" and selected_card.color == topCard.color:
-                                self.hand.pop(option - 1)
-                                return selected_card
-                        else:
-                            self.hand.extend(deck.drawCards(drawStack))
-                            print(f"{self.name} drew {drawStack} cards")
-                            return "None"
-
-                    if selected_card.__class__.__name__ == "WildCard":
-                        selected_card.color = self.chooseColor()
-                        self.hand.pop(option - 1)
-                        return selected_card
-
-                    if selected_card.color == topCard.color:
-                        self.hand.pop(option - 1)
-                        return selected_card
-
-                    if topCardType == "NumberCard" and selected_card.__class__.__name__ == "NumberCard":
-                        if selected_card.value == topCard.value:
-                            self.hand.pop(option - 1)
-                            return selected_card
-
-                    if topCardType == "ActionCard":
-                        if selected_card.__class__.__name__ == "WildCard":
-                            self.hand.pop(option - 1)
-                            return selected_card
-
-                        elif selected_card.__class__.__name__ == "ActionCard":
-                            if selected_card.action_type == topCard.action_type:
-                                self.hand.pop(option - 1)
-                                return selected_card
-
-                    elif topCardType == "NumberCard":
-                        if selected_card.__class__.__name__ == "WildCard":
-                            self.hand.pop(option - 1)
-                            return selected_card
-
-                    print("Invalid card, try again.")
-                    if drawStack > 0:
-                        print(f"You have a draw stack of {drawStack}.")
-                    continue
-
-                else:
-                    print("Invalid option, try again")
-            except:
-                print("Invalid option, try again")
-
-        
-
-    def drawUpToThree(self, topCard, deck):
-        for _ in range(3):
-            if self.canPlay(topCard):
-                return False
-
-            if not deck.cards:
-                print("No more cards in deck.")
-                return False
-
-            drawn_card = deck.drawCards(1)[0]
-            self.hand.append(drawn_card)
-            print(f"{self.name} drew 1 card: {drawn_card}")
-
-            if self.canPlay(topCard):
-                return True
-
-        return False
 
     def canPlay(self, topCard):
         for card in self.hand:
@@ -272,7 +159,91 @@ class HumanPlayer(Player):
                     return True
 
         return False
-    
+
+    def validMove(self, card, topCard):
+        if card.__class__.__name__ == "WildCard":
+            return True
+
+        if card.color == topCard.color:
+            return True
+
+        if topCard.__class__.__name__ == "NumberCard" and card.__class__.__name__ == "NumberCard":
+            if card.value == topCard.value:
+                return True
+
+        if topCard.__class__.__name__ == "ActionCard" and card.__class__.__name__ == "ActionCard":
+            if card.action_type == topCard.action_type:
+                return True
+
+        return False
+
+    def canStack(self, topCard, drawStack):
+        return False
+
+    def playTurn(self, topCard, deck, drawStack):
+        while True:
+            print(f"Top card: {topCard}")
+            print("-----------")
+            print(f"{self.name}'s turn: ")
+            for i, card in enumerate(self.hand, 1):
+                print(f"{i}. {card}")
+
+            if drawStack > 0:
+                print(f"{self.name} can't play and has to take the full +{drawStack} punishment.")
+                input("Press Enter to draw the cards... ")
+                for _ in range(drawStack):
+                    if not deck.cards:
+                        break
+                    self.hand.append(deck.drawCards(1)[0])
+                print(f"{self.name} picked up {drawStack} cards and skips the turn.")
+                return "DrawStackPassed"
+
+            if not self.canPlay(topCard):
+                print(f"{self.name} can't play and has to draw 1 card at a time.")
+                for _ in range(3):
+                    if not deck.cards:
+                        break
+
+                    input("Press Enter to draw 1 card... ")
+                    drawn_card = deck.drawCards(1)[0]
+                    self.hand.append(drawn_card)
+
+                    print(f"You drew: {drawn_card}")
+                    print(f"Top card: {topCard}")
+                    print("-----------")
+                    print(f"{self.name}'s turn: ")
+                    for i, card in enumerate(self.hand, 1):
+                        print(f"{i}. {card}")
+
+                    if self.canPlay(topCard):
+                        print("You can play now. Choose a card from your hand.")
+                        break
+
+                if not self.canPlay(topCard):
+                    print(f"{self.name} couldn't play after 3 cards and skips the turn.")
+                    return "None"
+                continue
+
+            try:
+                option = int(input("Choose a card: "))
+            except:
+                print("Invalid option, try again")
+                continue
+
+            if option <= 0 or option > len(self.hand):
+                print("Invalid option, try again")
+                continue
+
+            selected_card = self.hand[option - 1]
+
+            if self.validMove(selected_card, topCard):
+                if selected_card.__class__.__name__ == "WildCard":
+                    selected_card.color = self.chooseColor()
+                self.hand.pop(option - 1)
+                return selected_card
+
+            print("Invalid card, try again.")
+
 
 class Game():
     def __init__(self, deck=None):
@@ -294,40 +265,54 @@ class Game():
     def playGame(self):
         currentPlayerIdx = 0
         drawStack = 0
-        playersOut = 0
 
         while True:
-            if len(self.players) > 0:
-                subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
-                newTopCard = self.players[currentPlayerIdx].playTurn(self.discardPile[-1], self.deck, drawStack)
-                print(f"Card chosen: {newTopCard}")
-                if len(self.players[currentPlayerIdx].hand) < 1:
-                    self.players.pop(currentPlayerIdx)
-                    if playersOut == 0:
-                        print(f"Player {currentPlayerIdx} has won")
-                    else:
-                        print(f"Player {currentPlayerIdx} has exited in {playersOut + 1}:nd place")
-
-                if newTopCard is not None and newTopCard != "None":
-                    self.discardPile.append(newTopCard)
-
-                if newTopCard.__class__.__name__ == "WildCard" and newTopCard.wild_type == "+4":
-                    drawStack += 4
-                elif newTopCard.__class__.__name__ == "ActionCard" and newTopCard.action_type == "+2":
-                    drawStack += 2
-                elif newTopCard.__class__.__name__ == "ActionCard" and newTopCard.action_type == "Reverse":
-                    self.players.reverse()
-                elif newTopCard.__class__.__name__ == "ActionCard" and newTopCard.action_type == "Block":
-                    currentPlayerIdx += 1
-                
-
-                currentPlayerIdx += 1
-                if currentPlayerIdx >= len(self.players):
-                    currentPlayerIdx = 0
-                time.sleep(3)
-            else:
+            if len(self.players) == 0:
                 print("Game ended")
                 return
+
+            subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
+            move = self.players[currentPlayerIdx].playTurn(self.discardPile[-1], self.deck, drawStack)
+
+            if move == "DrawStackPassed":
+                drawStack = 0
+                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                time.sleep(1)
+                continue
+
+            if move == "None":
+                drawStack = 0
+                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+                time.sleep(1)
+                continue
+
+            self.discardPile.append(move)
+
+            if len(self.players[currentPlayerIdx].hand) == 0:
+                subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
+                print(f"{self.players[currentPlayerIdx].name} has won!")
+                return
+
+            if move.__class__.__name__ == "WildCard" and move.wild_type == "+4":
+                drawStack = 4
+                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+            elif move.__class__.__name__ == "ActionCard" and move.action_type == "+2":
+                drawStack = 2
+                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+            elif move.__class__.__name__ == "ActionCard" and move.action_type == "Reverse":
+                self.players.reverse()
+                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+            elif move.__class__.__name__ == "ActionCard" and move.action_type == "Block":
+                currentPlayerIdx = (currentPlayerIdx + 2) % len(self.players)
+            else:
+                currentPlayerIdx = (currentPlayerIdx + 1) % len(self.players)
+
+            if len(self.players[currentPlayerIdx].hand) < 1:
+                subprocess.run('cls' if os.name == 'nt' else 'clear', shell=True)
+                print(f"{self.players[currentPlayerIdx].name} wins!")
+                return
+
+            time.sleep(1)
             
 
 cards = Deck.createDeck()       
@@ -335,5 +320,5 @@ deck = Deck(cards)
 deck.shuffleDeck()
 game = Game(deck)
 
-game.initiateGame(2)
+game.initiateGame(3)
 game.playGame()
